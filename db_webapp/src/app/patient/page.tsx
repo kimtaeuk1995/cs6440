@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 export default function PatientPage() {
     const [readings, setReadings] = useState([]);
-    const [error, setError] = useState("");
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
-            const token = localStorage.getItem("access_token");
-            const username = localStorage.getItem("username");
+            const token = localStorage.getItem('access_token');
+            const username = localStorage.getItem('username');
 
             if (!token || !username) {
-                setError("Not logged in.");
+                setError("Not authenticated");
                 return;
             }
 
@@ -23,10 +23,7 @@ export default function PatientPage() {
                     },
                 });
 
-                if (!response.ok) {
-                    throw new Error("Failed to fetch data");
-                }
-
+                if (!response.ok) throw new Error("Fetch failed");
                 const data = await response.json();
                 setReadings(data);
             } catch (err) {
@@ -40,20 +37,16 @@ export default function PatientPage() {
 
     return (
         <div className="patient-container">
-            <h1>Blood Glucose Readings</h1>
-            {error && <p className="error-message">{error}</p>}
-            {readings.length > 0 ? (
-                <ul>
-                    {readings.map((reading, index) => (
-                        <li key={index}>
-                            <strong>{reading.blood_sugar} mg/dL</strong> on{" "}
-                            {new Date(reading.timestamp).toLocaleString()}
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p>No readings available.</p>
-            )}
+            <h1>Patient Glucose Readings</h1>
+            {error && <p>{error}</p>}
+            {!error && readings.length === 0 && <p>No readings available.</p>}
+            <ul>
+                {readings.map((r, i) => (
+                    <li key={i}>
+                        <strong>{r.blood_sugar}</strong> mg/dL — {new Date(r.timestamp).toLocaleString()}
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }

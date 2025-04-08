@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -9,14 +9,6 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        // Check if user is already logged in
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            router.push('/patient');
-        }
-    }, [router]);
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -29,17 +21,14 @@ export default function LoginPage() {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: new URLSearchParams({
-                    username,
-                    password,
-                }),
+                body: new URLSearchParams({ username, password }),
             });
 
             const data = await response.json();
 
             if (response.ok && data.access_token) {
                 localStorage.setItem('access_token', data.access_token);
-                localStorage.setItem('user_id', username); // Store username for later data fetch
+                localStorage.setItem('username', username); // store user
                 router.push('/patient');
             } else {
                 setError('Invalid credentials. Please try again.');
