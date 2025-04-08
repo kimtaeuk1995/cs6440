@@ -3,48 +3,57 @@
 import { useEffect, useState } from "react";
 
 export default function PatientPage() {
-  const [readings, setReadings] = useState([]);
-  const [error, setError] = useState("");
+    const [readings, setReadings] = useState([]);
+    const [error, setError] = useState("");
 
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      setError("No access token found.");
-      return;
-    }
-  
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/get_data`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch data");
-        return res.json();
-      })
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setReadings(data);
-        } else {
-          setError("No readings available.");
-        }
-      })
-      .catch(() => {
-        setError("Failed to fetch data");
-      });
-  }, []);
+    useEffect(() => {
+        const fetchData = async () => {
+            const token = localStorage.getItem("access_token");
+            const username = localStorage.getItem("username");
 
-  return (
-    <div>
-      <h1>Patient Glucose Readings</h1>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <ul>
-        {readings.map((reading, idx) => (
-          <li key={idx}>
-            {reading.timestamp}: {reading.blood_sugar} mg/dL
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+            if (!token || !username) {
+                setError("Not logged in.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/get_data/${username}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch data");
+                }
+
+                const data = await response.json();
+                setReadings(data);
+            } catch (err) {
+                console.error("Fetch error:", err);
+                setError("Failed to fetch data");
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    return (
+        <div className="patient-container">
+            <h1>Blood Glucose Readings</h1>
+            {error && <p className="error-message">{error}</p>}
+            {readings.length > 0 ? (
+                <ul>
+                    {readings.map((reading, index) => (
+                        <li key={index}>
+                            <strong>{reading.blood_sugar} mg/dL</strong> on{" "}
+                            {new Date(reading.timestamp).toLocaleString()}
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p>No readings available.</p>
+            )}
+        </div>
+    );
 }
